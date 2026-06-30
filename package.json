@@ -1,0 +1,35 @@
+{
+  "name": "prompt-translator",
+  "version": "1.0.0",
+  "description": "Local Persian to English Prompt Translator using Ollama",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.alimortazavi.prompttranslator",
+    "productName": "Prompt Translator",
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "category": "public.app-category.utilities",
+      "target": ["dmg"]
+    }
+  },
+  "keywords": [
+    "electron",
+    "ollama",
+    "translator",
+    "prompt"
+  ],
+  "author": "Alimortazavi",
+  "license": "MIT",
+  "packageManager": "pnpm@10.28.2",
+  "devDependencies": {
+    "electron": "^43.0.0",
+    "electron-builder": "^26.15.3"
+  }
+}

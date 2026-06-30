@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مترجم پرامپت محلی</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Window Drag Region (macOS specific) -->
+  <div class="titlebar-spacer"></div>
+
+  <div class="app-layout">
+    <!-- Left Sidebar (History & Navigation) -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="app-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>مترجم پرامپت</span>
+        </div>
+      </div>
+      
+      <button id="btn-new-chat" class="btn-new-chat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>گفتگوی جدید</span>
+      </button>
+
+      <div class="history-section">
+        <div class="section-title">تاریخچه گفتگوها</div>
+        <div class="history-list" id="history-list">
+          <div class="history-empty">تاریخچه‌ای وجود ندارد</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="chat-main">
+      <!-- Top header bar inside main area -->
+      <header class="chat-header">
+        <div class="header-right">
+          <!-- Sidebar Toggle button -->
+          <button id="btn-toggle-sidebar" class="btn-icon no-drag" title="تغییر وضعیت سایدبار">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          
+          <div class="status-container">
+            <span class="status-dot" id="status-dot"></span>
+            <span class="status-text" id="status-text">در حال بررسی Ollama...</span>
+          </div>
+          <button id="btn-start-ollama" class="btn-secondary btn-sm hidden no-drag">راه‌اندازی Ollama</button>
+        </div>
+
+        <div class="header-left no-drag">
+          <div class="model-selector-container">
+            <select id="model-select" class="control-select">
+              <option value="">در حال بارگذاری مدل‌ها...</option>
+            </select>
+          </div>
+          <button id="btn-refresh-status" class="btn-icon" title="بروزرسانی وضعیت">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Scrollable Message List Container -->
+      <div class="chat-messages-container" id="chat-messages-container">
+        
+        <!-- Welcome Screen -->
+        <div class="welcome-screen" id="welcome-screen">
+          <div class="welcome-badge">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#logo-grad)" stroke-width="2"><defs><linearGradient id="logo-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
+          <h2>چطور می‌تونم پرامپت شما رو ترجمه کنم؟</h2>
+          <p>پرامپت فارسی خود را در کادر زیر بنویسید تا آن را به انگلیسی تخصصی ترجمه کنم و لغات مهم و نکات گرامری آن را به شما آموزش دهم.</p>
+          
+          <div class="suggested-prompts">
+            <div class="suggest-card" data-prompt="یک عکس پرتره با کیفیت بالا از یک پیرمرد در باران" data-type="image">
+              <span>"پرتره پیرمرد در باران (تصویری)"</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+            <div class="suggest-card" data-prompt="میخوام یه اپ دسکتاپ با الکترون بنویسی که محلی کار کنه، اگه الاما بسته بود خودش باز کنه و سابقه رو ذخیره کنه" data-type="text">
+              <span>"برنامه دسکتاپ محلی الکترون (متنی/کد)"</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat messages list -->
+        <div class="messages-list" id="messages-list"></div>
+
+      </div>
+
+      <!-- Bottom Chat Input Bar -->
+      <footer class="chat-input-area">
+        <!-- Prompt Type Selector Toggle -->
+        <div class="prompt-type-selector no-drag">
+          <button id="btn-type-text" class="btn-type-toggle active" data-type="text">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>متنی و برنامه‌نویسی</span>
+          </button>
+          <button id="btn-type-image" class="btn-type-toggle" data-type="image">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>تصویرسازی</span>
+          </button>
+        </div>
+
+        <div class="chat-input-wrapper">
+          <textarea id="chat-input" placeholder="پرامپت خود را به فارسی بنویسید... (مثلا: پیاده‌سازی چک کردن وضعیت پورت در نودجی‌اس)"></textarea>
+          <div class="input-actions">
+            <span class="input-char-count" id="input-char-count">۰ کاراکتر</span>
+            <button id="btn-send" class="btn-send" disabled title="ارسال (Cmd+Enter)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="input-disclaimer">پردازش به صورت محلی روی سیستم شما انجام می‌شود.</div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

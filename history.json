@@ -1,0 +1,20 @@
+[
+  {
+    "id": "chat_1782849097036",
+    "title": "میخوام یه اپ تحت دسکتاپ ب...",
+    "type": "text",
+    "timestamp": "2026-06-30T19:51:37.036Z",
+    "messages": [
+      {
+        "role": "user",
+        "content": "میخوام یه اپ تحت دسکتاپ برام بنویسی که فک کنم بهترین گزینه با الکترون باشه میخوام پرامپت فارسیمو بهش بدم و به انگلیسی تبدیل کنه کاملا میخوام لوکال باشه روی سیستم ollama دارم و فک کنم با همون بشه کارو انجام داد یا اگه ایده دیگه داری بگو خیلی ساده باشه ولی شیک و حرفه ای باشه یسری چیزارو هم رعایت کن مثلا اگه الاما بسته بود خودت باز کنی یا چیز های دیگه که لازمه"
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "englishPrompt": "I want you to write a desktop app for me, which I think Electron would be the best option for. I want to give it my Persian prompt and have it converted to English. I want it to be completely local on my system, which has Ollama installed, and I think it can be done with that, or if you have any other ideas, tell me. It should be very simple but elegant and professional, and observe some things, for example, if Ollama is closed, open it yourself, or perform other necessary actions."
+        }
+      }
+    ]
+  }
+]
