@@ -33,11 +33,61 @@ let isOllamaOnline = false;
 let installedModels = [];
 let history = [];
 let activeChatId = null;
-let activePromptType = 'text'; // Default to text/code mode
-let activeEngine = 'google'; // Default to Google Translate
-let activeDirection = 'fa-to-en'; // Default direction
+let activePromptType = 'text';
+let activeEngine = 'google';
+let activeDirection = 'fa-to-en';
 
-// Handle Direction Change
+// Persian digit formatter
+const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+function toPersianDigits(num) {
+  return num.toString().replace(/\d/g, x => persianDigits[x]);
+}
+
+// Helper: escape HTML
+function escapeHTML(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ─── Engine & UI State ───────────────────────────────────────────────────────
+
+function updateInputState() {
+  const hasText = chatInput.value.trim().length > 0;
+  if (activeEngine === 'google') {
+    // Google mode: only need text to send
+    btnSend.disabled = !hasText;
+  } else {
+    // Ollama mode: need online + text + a selected model
+    const hasModel = modelSelect.value !== '';
+    btnSend.disabled = !(isOllamaOnline && hasText && hasModel);
+  }
+}
+
+function applyEngineUI() {
+  if (activeEngine === 'google') {
+    ollamaModelContainer.style.display = 'none';
+    btnStartOllama.classList.add('hidden');
+    statusContainer.style.display = 'none';
+    btnRefreshStatus.style.display = 'none';
+  } else {
+    ollamaModelContainer.style.display = 'block';
+    statusContainer.style.display = 'flex';
+    btnRefreshStatus.style.display = 'inline-flex';
+    checkOllamaStatus(false);
+  }
+  updateInputState();
+}
+
+engineSelect.addEventListener('change', (e) => {
+  activeEngine = e.target.value;
+  applyEngineUI();
+});
+
 directionSelect.addEventListener('change', (e) => {
   activeDirection = e.target.value;
   if (activeDirection === 'fa-to-en') {
@@ -51,36 +101,12 @@ directionSelect.addEventListener('change', (e) => {
   }
 });
 
+// ─── Ollama Status & Models ──────────────────────────────────────────────────
 
-// Handle Engine Change
-engineSelect.addEventListener('change', (e) => {
-  activeEngine = e.target.value;
-  if (activeEngine === 'google') {
-    ollamaModelContainer.style.display = 'none';
-    btnStartOllama.classList.add('hidden');
-    statusContainer.style.display = 'none';
-    btnRefreshStatus.style.display = 'none';
-  } else {
-    ollamaModelContainer.style.display = 'block';
-    statusContainer.style.display = 'flex';
-    btnRefreshStatus.style.display = 'inline-flex';
-    checkOllamaStatus(false);
-  }
-});
-// Initialize display
-engineSelect.dispatchEvent(new Event('change'));
-
-// Persian digit formatter
-const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-function toPersianDigits(num) {
-  return num.toString().replace(/\d/g, x => persianDigits[x]);
-}
-
-// 1. Connection & Model Checking
 async function checkOllamaStatus(autoStart = false) {
   statusText.textContent = 'در حال بررسی Ollama...';
   statusDot.className = 'status-dot';
-  
+
   const online = await window.api.checkOllama();
   isOllamaOnline = online;
 
@@ -91,7 +117,7 @@ async function checkOllamaStatus(autoStart = false) {
     await loadModels();
   } else {
     statusDot.className = 'status-dot';
-    
+
     if (autoStart) {
       statusText.textContent = 'در حال باز کردن خودکار Ollama...';
       const started = await window.api.startOllama();
@@ -102,7 +128,7 @@ async function checkOllamaStatus(autoStart = false) {
         return;
       }
     }
-    
+
     statusText.textContent = 'سرویس Ollama بسته است';
     btnStartOllama.classList.remove('hidden');
     modelSelect.innerHTML = '<option value="">Ollama قطع است</option>';
@@ -113,37 +139,31 @@ async function checkOllamaStatus(autoStart = false) {
 async function loadModels() {
   const models = await window.api.getModels();
   installedModels = models;
-  
+
   if (models.length === 0) {
     modelSelect.innerHTML = '<option value="">هیچ مدلی یافت نشد! ابتدا مدل دانلود کنید</option>';
     updateInputState();
     return;
   }
 
-  modelSelect.innerHTML = models.map(model => 
+  modelSelect.innerHTML = models.map(model =>
     `<option value="${model}">${model}</option>`
   ).join('');
 
-  // Default Selection Logic
   const preferredModel = models.find(m => m.startsWith('llama3.2:3b')) ||
-                          models.find(m => m.startsWith('llama3.2')) ||
-                          models.find(m => m.includes('qwen')) ||
-                          models[0];
-                          
+                         models.find(m => m.startsWith('llama3.2')) ||
+                         models.find(m => m.includes('qwen')) ||
+                         models[0];
+
   if (preferredModel) {
     modelSelect.value = preferredModel;
   }
-  
+
   updateInputState();
 }
 
-function updateInputState() {
-  const hasText = chatInput.value.trim().length > 0;
-  const hasModel = modelSelect.value !== '';
-  btnSend.disabled = !(isOllamaOnline && hasText && hasModel);
-}
+// ─── History Management ──────────────────────────────────────────────────────
 
-// 2. Local File History Management
 async function loadHistoryFromDisk() {
   history = await window.api.loadHistory();
   renderSidebar();
@@ -175,21 +195,17 @@ function renderSidebar() {
     `;
   }).join('');
 
-  // Attach Sidebar Click Listeners
   document.querySelectorAll('.history-item').forEach(item => {
     item.addEventListener('click', (e) => {
       if (e.target.closest('.btn-delete-history')) return;
-      const chatId = item.getAttribute('data-id');
-      selectChat(chatId);
+      selectChat(item.getAttribute('data-id'));
     });
   });
 
-  // Attach Sidebar Delete Listeners
   document.querySelectorAll('.btn-delete-history').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const chatId = btn.getAttribute('data-id');
-      deleteChat(chatId);
+      deleteChat(btn.getAttribute('data-id'));
     });
   });
 }
@@ -197,14 +213,13 @@ function renderSidebar() {
 function selectChat(chatId) {
   activeChatId = chatId;
   renderSidebar();
-  
+
   const activeChat = history.find(c => c.id === chatId);
   if (!activeChat || activeChat.messages.length === 0) {
     messagesList.innerHTML = '';
     welcomeScreen.classList.remove('hidden');
   } else {
     welcomeScreen.classList.add('hidden');
-    // Restore Prompt Type toggle state
     setPromptType(activeChat.type || 'text');
     renderMessages(activeChat.messages);
   }
@@ -217,7 +232,7 @@ function createNewChat() {
   welcomeScreen.classList.remove('hidden');
   chatInput.value = '';
   chatInput.focus();
-  setPromptType('text'); // Reset to default mode
+  setPromptType('text');
   updateInputCharCount();
 }
 
@@ -231,7 +246,8 @@ function deleteChat(chatId) {
   saveHistoryToDisk();
 }
 
-// Manage Prompt Type Selector
+// ─── Prompt Type ─────────────────────────────────────────────────────────────
+
 function setPromptType(type) {
   activePromptType = type;
   if (type === 'image') {
@@ -246,31 +262,30 @@ function setPromptType(type) {
 btnTypeText.addEventListener('click', () => setPromptType('text'));
 btnTypeImage.addEventListener('click', () => setPromptType('image'));
 
-// 3. Render Message Bubbles & Cards
+// ─── Render Messages ─────────────────────────────────────────────────────────
+
 function renderMessages(messages) {
   messagesList.innerHTML = '';
 
   messages.forEach(msg => {
     const item = document.createElement('div');
-    
+
     if (msg.role === 'user') {
       item.className = 'message-item user';
       item.innerHTML = `<div class="user-bubble">${escapeHTML(msg.content)}</div>`;
     } else if (msg.role === 'assistant') {
       item.className = 'message-item assistant';
-      
+
       const content = msg.content;
-      
       const copyBtnId = `copy-btn-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
       item.innerHTML = `
         <div class="assistant-response-wrapper">
-          <!-- Translation Card -->
           <div class="response-card">
             <div class="card-title-row">
               <div class="card-title-text">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>English Prompt Translation</span>
+                <span>Prompt Translation</span>
               </div>
               <button id="${copyBtnId}" class="btn-icon-text btn-copy-prompt no-drag" dir="ltr">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -292,41 +307,41 @@ function renderMessages(messages) {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 <span style="color: #10b981;">Copied!</span>
               `;
-              setTimeout(() => {
-                copyBtn.innerHTML = originalContent;
-              }, 2000);
+              setTimeout(() => { copyBtn.innerHTML = originalContent; }, 2000);
             });
           });
         }
       }, 0);
     }
-    
+
     messagesList.appendChild(item);
   });
 
   chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
 }
 
-// 4. Send Message & Run Local AI Translation
+// ─── Send Message ─────────────────────────────────────────────────────────────
+
 async function sendMessage() {
   const text = chatInput.value.trim();
-  const selectedModel = modelSelect.value;
 
-  if (!text || !selectedModel || !isOllamaOnline) return;
+  // Guard: need text; in Ollama mode also need online status + model
+  if (!text) return;
+  if (activeEngine === 'ollama' && (!isOllamaOnline || !modelSelect.value)) return;
 
-  // Clear input area immediately
+  const selectedModel = activeEngine === 'ollama' ? modelSelect.value : '';
+
   chatInput.value = '';
   updateInputCharCount();
   welcomeScreen.classList.add('hidden');
 
-  // Handle New Chat Generation
   if (activeChatId === null) {
     activeChatId = 'chat_' + Date.now();
     const chatTitle = text.length > 25 ? text.substring(0, 25) + '...' : text;
     history.unshift({
       id: activeChatId,
       title: chatTitle,
-      type: activePromptType, // Save active prompt type for restoration
+      type: activePromptType,
       timestamp: new Date().toISOString(),
       messages: []
     });
@@ -336,11 +351,10 @@ async function sendMessage() {
   const activeChat = history.find(c => c.id === activeChatId);
   if (!activeChat) return;
 
-  // Append user message
   activeChat.messages.push({ role: 'user', content: text });
   renderMessages(activeChat.messages);
 
-  // Append temporary Shimmer skeleton loader
+  // Skeleton loader
   const skeleton = document.createElement('div');
   skeleton.className = 'message-item assistant temp-loader';
   skeleton.innerHTML = `
@@ -359,24 +373,20 @@ async function sendMessage() {
   messagesList.appendChild(skeleton);
   chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
 
-  // Disable inputs while generating
   chatInput.disabled = true;
   btnSend.disabled = true;
 
-  // Call main IPC translate
   const result = await window.api.translate({
     prompt: text,
     model: selectedModel,
-    promptType: activePromptType, // Send active prompt type to backend
-    engine: activeEngine, // Send selected engine
-    direction: activeDirection // Send selected direction
+    promptType: activePromptType,
+    engine: activeEngine,
+    direction: activeDirection
   });
 
-  // Remove skeleton loader
   const tempLoader = document.querySelector('.temp-loader');
   if (tempLoader) tempLoader.remove();
 
-  // Re-enable inputs
   chatInput.disabled = false;
   chatInput.focus();
   updateInputState();
@@ -384,32 +394,18 @@ async function sendMessage() {
   if (result.success) {
     activeChat.messages.push({ role: 'assistant', content: result.data });
   } else {
-    // Generate clean looking error structure
     activeChat.messages.push({
       role: 'assistant',
-      content: {
-        englishPrompt: `خطا در ارتباط با مدل: ${result.error}`
-      }
+      content: { englishPrompt: `خطا: ${result.error}` }
     });
   }
 
-  // Refresh messages rendering and save updated history
   renderMessages(activeChat.messages);
   saveHistoryToDisk();
 }
 
-// Helper: escape HTML
-function escapeHTML(str) {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+// ─── Input Helpers ────────────────────────────────────────────────────────────
 
-// 5. General Helpers & Event Listeners
 function updateInputCharCount() {
   const count = chatInput.value.length;
   inputCharCount.textContent = `${toPersianDigits(count)} کاراکتر`;
@@ -420,56 +416,45 @@ chatInput.addEventListener('input', updateInputCharCount);
 
 btnSend.addEventListener('click', sendMessage);
 
-// Send message via Cmd+Enter or Ctrl+Enter
 chatInput.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
     e.preventDefault();
-    if (!btnSend.disabled) {
-      sendMessage();
-    }
+    if (!btnSend.disabled) sendMessage();
   }
 });
 
 btnNewChat.addEventListener('click', createNewChat);
+btnRefreshStatus.addEventListener('click', () => checkOllamaStatus(false));
+btnStartOllama.addEventListener('click', () => checkOllamaStatus(true));
 
-btnRefreshStatus.addEventListener('click', () => {
-  checkOllamaStatus(false);
-});
-
-btnStartOllama.addEventListener('click', () => {
-  checkOllamaStatus(true);
-});
-
-// Collapsible Sidebar
 btnToggleSidebar.addEventListener('click', () => {
   sidebar.classList.toggle('collapsed');
 });
 
-// Suggested Cards click action
+// Suggested Cards
 document.querySelectorAll('.suggest-card').forEach(card => {
   card.addEventListener('click', () => {
     const prompt = card.getAttribute('data-prompt');
     const type = card.getAttribute('data-type') || 'text';
-    
-    // Automatically set the prompt type of suggestions
     setPromptType(type);
-    
     chatInput.value = prompt;
     chatInput.focus();
     updateInputCharCount();
-  }); // end of suggested card click listener
+  });
+});
 
-// Tooltip logic for single-word translation
-let tooltip = document.getElementById('translation-tooltip');
+// ─── Word Tooltip Translation ─────────────────────────────────────────────────
+
+const tooltip = document.getElementById('translation-tooltip');
 let tooltipTimer = null;
 
-// Helper to show tooltip
 function showTooltip(x, y, html) {
   tooltip.innerHTML = html;
   tooltip.style.left = `${x + 12}px`;
   tooltip.style.top = `${y + 12}px`;
   tooltip.style.display = 'block';
 }
+
 function hideTooltip() {
   tooltip.style.display = 'none';
   tooltip.innerHTML = '';
@@ -479,10 +464,8 @@ function hideTooltip() {
   }
 }
 
-// Loading spinner markup
 const spinnerHtml = `<div class="spinner" style="width:16px;height:16px;border:2px solid var(--text-muted);border-top-color:var(--primary-color);border-radius:50%;animation:spin 0.8s linear infinite;"></div>`;
 
-// Ensure spinner keyframes exist
 if (!document.getElementById('spinner-keyframes')) {
   const style = document.createElement('style');
   style.id = 'spinner-keyframes';
@@ -490,24 +473,30 @@ if (!document.getElementById('spinner-keyframes')) {
   document.head.appendChild(style);
 }
 
-// Listen for mouseup selection
 document.addEventListener('mouseup', async (e) => {
   const sel = window.getSelection();
-  const text = sel.toString().trim();
-  if (!text) return;
-  if (/\s/.test(text)) return; // only single word
+  const text = sel ? sel.toString().trim() : '';
+  if (!text || /\s/.test(text)) return; // single word only
+
+  // Tooltip always translates in the OPPOSITE direction of main mode
+  // fa-to-en main → tooltip shows Persian meaning of English word (en-to-fa)
+  // en-to-fa main → tooltip shows English meaning of Persian word (fa-to-en)
+  const tooltipDirection = activeDirection === 'fa-to-en' ? 'en-to-fa' : 'fa-to-en';
+
   showTooltip(e.pageX, e.pageY, spinnerHtml);
+
   try {
     const result = await window.api.translate({
       prompt: text,
-      model: modelSelect.value,
-      promptType: activePromptType,
+      model: modelSelect.value || '',
+      promptType: 'text',
       engine: activeEngine,
-      direction: activeDirection,
+      direction: tooltipDirection,
     });
     if (result.success) {
       const translated = typeof result.data === 'object' ? result.data.englishPrompt : result.data;
-      showTooltip(e.pageX, e.pageY, `<span style="direction:ltr;">${escapeHTML(translated)}</span>`);
+      const isRtl = tooltipDirection === 'fa-to-en' ? false : true;
+      showTooltip(e.pageX, e.pageY, `<span style="direction:${isRtl ? 'rtl' : 'ltr'};">${escapeHTML(translated)}</span>`);
     } else {
       showTooltip(e.pageX, e.pageY, `<span style="color:var(--status-offline);">❌ ترجمه نشد</span>`);
     }
@@ -516,21 +505,16 @@ document.addEventListener('mouseup', async (e) => {
   }
 });
 
-// Hide on click outside or Escape
 document.addEventListener('click', (e) => {
   if (!tooltip.contains(e.target)) hideTooltip();
 });
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') hideTooltip();
 });
 
-
-// App Startup
-document.addEventListener('DOMContentLoaded', () => {
-  // Only check Ollama status when using offline engine (not Google)
-  if (activeEngine !== 'google') {
-    checkOllamaStatus(true);
-  }
-  loadHistoryFromDisk();
-  createNewChat();
-});
+// ─── App Startup ──────────────────────────────────────────────────────────────
+// DOM is already ready (script is at end of body), call init directly
+applyEngineUI();
+loadHistoryFromDisk();
+createNewChat();
