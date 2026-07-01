@@ -3,6 +3,7 @@ const path = require('path');
 const { exec } = require('child_process');
 const fs = require('fs').promises;
 const https = require('https');
+const fetch = require('node-fetch');
 
 let mainWindow;
 const historyPath = path.join(app.getPath('userData'), 'history.json');
@@ -47,9 +48,10 @@ app.on('window-all-closed', () => {
 // 1. Check if Ollama is running
 ipcMain.handle('check-ollama', async () => {
   try {
-    const res = await fetch('http://127.0.0.1:11434/api/tags', { signal: AbortSignal.timeout(2000) });
+    const res = await fetch('http://127.0.0.1:11434/api/tags', { timeout: 2000 });
     return res.ok;
   } catch (e) {
+    console.error('check-ollama error:', e);
     return false;
   }
 });

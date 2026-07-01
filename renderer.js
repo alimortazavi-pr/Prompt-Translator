@@ -457,12 +457,80 @@ document.querySelectorAll('.suggest-card').forEach(card => {
     chatInput.value = prompt;
     chatInput.focus();
     updateInputCharCount();
-  });
+  }); // end of suggested card click listener
+
+// Tooltip logic for single-word translation
+let tooltip = document.getElementById('translation-tooltip');
+let tooltipTimer = null;
+
+// Helper to show tooltip
+function showTooltip(x, y, html) {
+  tooltip.innerHTML = html;
+  tooltip.style.left = `${x + 12}px`;
+  tooltip.style.top = `${y + 12}px`;
+  tooltip.style.display = 'block';
+}
+function hideTooltip() {
+  tooltip.style.display = 'none';
+  tooltip.innerHTML = '';
+  if (tooltipTimer) {
+    clearTimeout(tooltipTimer);
+    tooltipTimer = null;
+  }
+}
+
+// Loading spinner markup
+const spinnerHtml = `<div class="spinner" style="width:16px;height:16px;border:2px solid var(--text-muted);border-top-color:var(--primary-color);border-radius:50%;animation:spin 0.8s linear infinite;"></div>`;
+
+// Ensure spinner keyframes exist
+if (!document.getElementById('spinner-keyframes')) {
+  const style = document.createElement('style');
+  style.id = 'spinner-keyframes';
+  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+  document.head.appendChild(style);
+}
+
+// Listen for mouseup selection
+document.addEventListener('mouseup', async (e) => {
+  const sel = window.getSelection();
+  const text = sel.toString().trim();
+  if (!text) return;
+  if (/\s/.test(text)) return; // only single word
+  showTooltip(e.pageX, e.pageY, spinnerHtml);
+  try {
+    const result = await window.api.translate({
+      prompt: text,
+      model: modelSelect.value,
+      promptType: activePromptType,
+      engine: activeEngine,
+      direction: activeDirection,
+    });
+    if (result.success) {
+      const translated = typeof result.data === 'object' ? result.data.englishPrompt : result.data;
+      showTooltip(e.pageX, e.pageY, `<span style="direction:ltr;">${escapeHTML(translated)}</span>`);
+    } else {
+      showTooltip(e.pageX, e.pageY, `<span style="color:var(--status-offline);">❌ ترجمه نشد</span>`);
+    }
+  } catch (err) {
+    showTooltip(e.pageX, e.pageY, `<span style="color:var(--status-offline);">❌ خطا</span>`);
+  }
 });
+
+// Hide on click outside or Escape
+document.addEventListener('click', (e) => {
+  if (!tooltip.contains(e.target)) hideTooltip();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideTooltip();
+});
+
 
 // App Startup
 document.addEventListener('DOMContentLoaded', () => {
-  checkOllamaStatus(true);
+  // Only check Ollama status when using offline engine (not Google)
+  if (activeEngine !== 'google') {
+    checkOllamaStatus(true);
+  }
   loadHistoryFromDisk();
   createNewChat();
 });

@@ -943,3 +943,16 @@ button {
     animation: none !important;
   }
 }
+.translation-tooltip {
+  position: absolute;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  max-width: 220px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 1000;
+  pointer-events: none;
+}

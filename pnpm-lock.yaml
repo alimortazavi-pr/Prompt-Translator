@@ -11,6 +11,9 @@ importers:
       '@vitalets/google-translate-api':
         specifier: ^9.2.1
         version: 9.2.1
+      node-fetch:
+        specifier: ^2.7.0
+        version: 2.7.0
     devDependencies:
       electron:
         specifier: ^43.0.0

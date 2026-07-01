@@ -46,6 +46,7 @@
     "electron-builder": "^26.15.3"
   },
   "dependencies": {
-    "@vitalets/google-translate-api": "^9.2.1"
+    "@vitalets/google-translate-api": "^9.2.1",
+    "node-fetch": "^2.7.0"
   }
 }
