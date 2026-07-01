@@ -24,6 +24,7 @@ const btnTypeImage = document.getElementById('btn-type-image');
 
 // Engine Elements
 const engineSelect = document.getElementById('engine-select');
+const directionSelect = document.getElementById('direction-select');
 const ollamaModelContainer = document.getElementById('ollama-model-container');
 const statusContainer = document.querySelector('.status-container');
 
@@ -34,6 +35,22 @@ let history = [];
 let activeChatId = null;
 let activePromptType = 'text'; // Default to text/code mode
 let activeEngine = 'google'; // Default to Google Translate
+let activeDirection = 'fa-to-en'; // Default direction
+
+// Handle Direction Change
+directionSelect.addEventListener('change', (e) => {
+  activeDirection = e.target.value;
+  if (activeDirection === 'fa-to-en') {
+    chatInput.placeholder = 'پرامپت خود را به فارسی بنویسید... (مثلا: پیاده‌سازی چک کردن وضعیت پورت در نودجی‌اس)';
+    chatInput.style.direction = 'rtl';
+    chatInput.style.textAlign = 'right';
+  } else {
+    chatInput.placeholder = 'Write your prompt in English... (e.g., Implement port status check in Node.js)';
+    chatInput.style.direction = 'ltr';
+    chatInput.style.textAlign = 'left';
+  }
+});
+
 
 // Handle Engine Change
 engineSelect.addEventListener('change', (e) => {
@@ -351,7 +368,8 @@ async function sendMessage() {
     prompt: text,
     model: selectedModel,
     promptType: activePromptType, // Send active prompt type to backend
-    engine: activeEngine // Send selected engine
+    engine: activeEngine, // Send selected engine
+    direction: activeDirection // Send selected direction
   });
 
   // Remove skeleton loader

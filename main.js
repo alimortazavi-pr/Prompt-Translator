@@ -5,7 +5,7 @@ const fs = require('fs').promises;
 const https = require('https');
 
 let mainWindow;
-const historyPath = path.join(__dirname, 'history.json');
+const historyPath = path.join(app.getPath('userData'), 'history.json');
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -117,14 +117,16 @@ ipcMain.handle('save-history', async (event, historyData) => {
 });
 
 // 6. Translate Prompt (JSON output, mode-specific)
-ipcMain.handle('translate', async (event, { prompt, model, promptType, engine }) => {
+ipcMain.handle('translate', async (event, { prompt, model, promptType, engine, direction }) => {
   // Use Google Translate if selected
   if (engine === 'google') {
+    const sl = direction === 'en-to-fa' ? 'en' : 'fa';
+    const tl = direction === 'en-to-fa' ? 'fa' : 'en';
     let retries = 3;
     while (retries > 0) {
       try {
         const textTranslation = await new Promise((resolve, reject) => {
-          const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=fa&tl=en&dt=t&q=${encodeURIComponent(prompt)}`;
+          const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(prompt)}`;
           
           https.get(url, (res) => {
             let data = '';
@@ -209,7 +211,47 @@ You MUST respond ONLY with a valid JSON object matching this schema:
 }
 `;
 
-  const systemPrompt = promptType === 'image' ? imageSystemPrompt : textSystemPrompt;
+  const imageSystemPromptEnToFa = `
+You are an expert Persian translator and prompt engineer specialized in text-to-image AI systems (such as Midjourney, Stable Diffusion, and DALL-E).
+Your job is to translate English descriptive prompts into natural and highly accurate Persian prompts, preserving all comma-separated visual tags and styling keywords.
+
+Guidelines:
+- Translate all descriptive terms accurately into standard Persian equivalents.
+- Keep the structure similar (e.g., comma-separated terms).
+- Do not introduce elements not present in the English text.
+
+You MUST respond ONLY with a valid JSON object matching this schema:
+{
+  "englishPrompt": "The translation in Persian"
+}
+
+Ensure the JSON is valid and written in UTF-8. Only output raw JSON. Do not add markdown backticks.
+`;
+
+  const textSystemPromptEnToFa = `
+You are a strict, literal, and highly precise English to Persian translator. Your sole purpose is to translate the user's English text into Persian with 100% fidelity.
+
+CRITICAL INSTRUCTIONS:
+1. TRANSLATE EVERY SINGLE DETAIL: Do NOT summarize. Every single requirement in the English text MUST exist in your Persian translation.
+2. PRESERVE THE EXACT TONE & PERSON: If the user writes in the first person (e.g., "I want..."), translate it in the first person in Persian (e.g., "میخوام...").
+3. IMPERATIVE VERBS (COMMANDS): Translate commands directly (e.g. "Look" -> "ببین", "Read" -> "بخوان/بخون").
+4. DO NOT ACT AS AN AI ASSISTANT: Do NOT answer the prompt. You are only a translator.
+5. NO HALLUCINATIONS: Do not add anything that was not in the original text.
+
+You MUST respond ONLY with a valid JSON object matching this schema:
+{
+  "englishPrompt": "The FULL, complete, and exact Persian translation of the English text without omitting any detail."
+}
+
+Ensure the JSON is valid and written in UTF-8. Only output raw JSON. Do not add markdown backticks.
+`;
+
+  let systemPrompt;
+  if (direction === 'en-to-fa') {
+    systemPrompt = promptType === 'image' ? imageSystemPromptEnToFa : textSystemPromptEnToFa;
+  } else {
+    systemPrompt = promptType === 'image' ? imageSystemPrompt : textSystemPrompt;
+  }
 
   try {
     const response = await fetch('http://127.0.0.1:11434/api/chat', {
