@@ -5,9 +5,10 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --mac"
+    "build": "ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ electron-builder --mac"
   },
   "build": {
+    "electronDist": "node_modules/electron/dist",
     "appId": "com.alimortazavi.prompttranslator",
     "productName": "Prompt Translator",
     "directories": {
