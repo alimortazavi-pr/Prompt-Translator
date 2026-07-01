@@ -1,5 +1,77 @@
 [
   {
+    "id": "chat_1782904251250",
+    "title": "پروژه \"pbudget-mobile-rn\"...",
+    "type": "text",
+    "timestamp": "2026-07-01T11:10:51.250Z",
+    "messages": [
+      {
+        "role": "user",
+        "content": "پروژه \"pbudget-mobile-rn\" رو ببین میخوام کاملش کنم و کاملا عملی و قابل استفاده باشه\nپروژه فرانت رو کامل بخون خط به خط و فایل به فایل و دقیقا اپلیکیشن رو مثل اون بزن و کاملش کن\nهیچی چیزی کمتر از سایت نداشته باشه اپلیکشین"
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "englishPrompt": "See the \"pbudget-mobile-rn\" project, I want to complete it and make it completely practical and usable\nRead the front project completely line by line and file by file and run the application exactly like that and complete it\nIt should not have anything less than the website"
+        }
+      }
+    ]
+  },
+  {
+    "id": "chat_1782904134884",
+    "title": "پروژه \"pbudget-mobile-rn\"...",
+    "type": "text",
+    "timestamp": "2026-07-01T11:08:54.884Z",
+    "messages": [
+      {
+        "role": "user",
+        "content": "پروژه \"pbudget-mobile-rn\" رو ببین میخوام کاملش کنم و کاملا عملی و قابل استفاده باشه\nپروژه فرانت رو کامل بخون خط به خط و فایل به فایل و دقیقا اپلیکیشن رو مثل اون بزن و کاملش کن\nهیچی چیزی کمتر از سایت نداشته باشه اپلیکشین"
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "englishPrompt": "خطا در ارتباط با مدل: خطا در ارتباط با سرور ترجمه (اینترنت یا VPN خود را بررسی کنید): Invalid response body while trying to fetch https://translate.google.com/translate_a/single?client=at&dt=t&dt=rm&dj=1: Premature close"
+        }
+      }
+    ]
+  },
+  {
+    "id": "chat_1782903888689",
+    "title": "پروژه \"pbudget-mobile-rn\"...",
+    "type": "text",
+    "timestamp": "2026-07-01T11:04:48.689Z",
+    "messages": [
+      {
+        "role": "user",
+        "content": "پروژه \"pbudget-mobile-rn\" رو ببین میخوام کاملش کنم و کاملا عملی و قابل استفاده باشه\nپروژه فرانت رو کامل بخون خط به خط و فایل به فایل و دقیقا اپلیکیشن رو مثل اون بزن و کاملش کن\nهیچی چیزی کمتر از سایت نداشته باشه اپلیکشین"
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "englishPrompt": "خطا در ارتباط با مدل: Invalid response body while trying to fetch https://translate.google.com/translate_a/single?client=at&dt=t&dt=rm&dj=1: Premature close"
+        }
+      }
+    ]
+  },
+  {
+    "id": "chat_1782901109492",
+    "title": "پروژه \"pbudget-mobile-rn\"...",
+    "type": "text",
+    "timestamp": "2026-07-01T10:18:29.492Z",
+    "messages": [
+      {
+        "role": "user",
+        "content": "پروژه \"pbudget-mobile-rn\" رو ببین میخوام کاملش کنم و کاملا عملی و قابل استفاده باشه\nپروژه فرانت رو کامل بخون خط به خط و فایل به فایل و دقیقا اپلیکیشن رو مثل اون بزن و کاملش کن\nهیچی چیزی کمتر از سایت نداشته باشه اپلیکشین حتی دیزاینشم یکی باشه"
+      },
+      {
+        "role": "assistant",
+        "content": {
+          "englishPrompt": "Look at the \"pbudget-mobile-rn\" project, complete it and make it completely practical and usable. Complete the frontend project line by line and file by file, exactly like the application, and complete it. The application should have nothing less than the website, even its design."
+        }
+      }
+    ]
+  },
+  {
     "id": "chat_1782849097036",
     "title": "میخوام یه اپ تحت دسکتاپ ب...",
     "type": "text",

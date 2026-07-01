@@ -55,6 +55,12 @@
 
         <div class="header-left no-drag">
           <div class="model-selector-container">
+            <select id="engine-select" class="control-select">
+              <option value="google">Google Translate (آنلاین)</option>
+              <option value="ollama">Ollama (آفلاین)</option>
+            </select>
+          </div>
+          <div class="model-selector-container" id="ollama-model-container" style="display: none;">
             <select id="model-select" class="control-select">
               <option value="">در حال بارگذاری مدل‌ها...</option>
             </select>

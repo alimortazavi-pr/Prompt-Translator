@@ -22,12 +22,36 @@ const inputCharCount = document.getElementById('input-char-count');
 const btnTypeText = document.getElementById('btn-type-text');
 const btnTypeImage = document.getElementById('btn-type-image');
 
+// Engine Elements
+const engineSelect = document.getElementById('engine-select');
+const ollamaModelContainer = document.getElementById('ollama-model-container');
+const statusContainer = document.querySelector('.status-container');
+
 // State Variables
 let isOllamaOnline = false;
 let installedModels = [];
 let history = [];
 let activeChatId = null;
 let activePromptType = 'text'; // Default to text/code mode
+let activeEngine = 'google'; // Default to Google Translate
+
+// Handle Engine Change
+engineSelect.addEventListener('change', (e) => {
+  activeEngine = e.target.value;
+  if (activeEngine === 'google') {
+    ollamaModelContainer.style.display = 'none';
+    btnStartOllama.classList.add('hidden');
+    statusContainer.style.display = 'none';
+    btnRefreshStatus.style.display = 'none';
+  } else {
+    ollamaModelContainer.style.display = 'block';
+    statusContainer.style.display = 'flex';
+    btnRefreshStatus.style.display = 'inline-flex';
+    checkOllamaStatus(false);
+  }
+});
+// Initialize display
+engineSelect.dispatchEvent(new Event('change'));
 
 // Persian digit formatter
 const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -326,7 +350,8 @@ async function sendMessage() {
   const result = await window.api.translate({
     prompt: text,
     model: selectedModel,
-    promptType: activePromptType // Send active prompt type to backend
+    promptType: activePromptType, // Send active prompt type to backend
+    engine: activeEngine // Send selected engine
   });
 
   // Remove skeleton loader

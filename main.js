@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 const fs = require('fs').promises;
+const https = require('https');
 
 let mainWindow;
 const historyPath = path.join(__dirname, 'history.json');
@@ -116,7 +117,46 @@ ipcMain.handle('save-history', async (event, historyData) => {
 });
 
 // 6. Translate Prompt (JSON output, mode-specific)
-ipcMain.handle('translate', async (event, { prompt, model, promptType }) => {
+ipcMain.handle('translate', async (event, { prompt, model, promptType, engine }) => {
+  // Use Google Translate if selected
+  if (engine === 'google') {
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        const textTranslation = await new Promise((resolve, reject) => {
+          const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=fa&tl=en&dt=t&q=${encodeURIComponent(prompt)}`;
+          
+          https.get(url, (res) => {
+            let data = '';
+            res.on('data', (chunk) => {
+              data += chunk;
+            });
+            res.on('end', () => {
+              try {
+                const parsed = JSON.parse(data);
+                const translation = parsed[0].map(item => item[0]).join('');
+                resolve(translation);
+              } catch (e) {
+                reject(new Error("پاسخ نامعتبر از سرور ترجمه: " + data));
+              }
+            });
+          }).on('error', (err) => {
+            reject(err);
+          });
+        });
+
+        return { success: true, data: { englishPrompt: textTranslation } };
+      } catch (err) {
+        retries--;
+        console.error(`Google Translate error (retries left: ${retries}):`, err.message);
+        if (retries === 0) {
+          return { success: false, error: "خطا در ارتباط با سرور ترجمه (اینترنت یا VPN خود را بررسی کنید): " + err.message };
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+  }
+
   // 1. Define prompts based on type (Image vs. Text/Code)
   const imageSystemPrompt = `
 You are an expert English translator and prompt engineer specialized in text-to-image AI systems (such as Midjourney, Stable Diffusion, and DALL-E).
@@ -150,13 +190,18 @@ You are a strict, literal, and highly precise Persian to English translator. You
 
 CRITICAL INSTRUCTIONS - READ CAREFULLY:
 1. TRANSLATE EVERY SINGLE DETAIL: Do NOT summarize. Do NOT skip any sentence, idea, constraint, or feature. Every single requirement mentioned in the Persian text MUST exist in your English translation.
-2. PRESERVE THE EXACT TONE & PERSON: If the user writes in the first person (e.g., "I want..."), translate it as "I want...". Do not change it to a command (e.g., "Create...").
-3. DO NOT ACT AS AN AI ASSISTANT: Do NOT answer the user's prompt. You are only a translator.
-4. NO HALLUCINATIONS: Do not add anything that was not in the original text.
+2. PRESERVE THE EXACT TONE & PERSON: If the user writes in the first person (e.g., "I want..."), translate it as "I want...".
+3. IMPERATIVE VERBS (COMMANDS): If the user uses imperative verbs (e.g., "ببین" = "Look", "بخون" = "Read", "بزن" = "Code/Make/Do"), translate them as imperative verbs in English. Do NOT convert them into "I want to..." or "It should be...".
+4. DO NOT ACT AS AN AI ASSISTANT: Do NOT answer the user's prompt. You are only a translator.
+5. NO HALLUCINATIONS: Do not add anything that was not in the original text.
 
-Example:
+Example 1 (First-person):
 User: میخوام یه اپ تحت دسکتاپ برام بنویسی که فک کنم بهترین گزینه با الکترون باشه میخوام پرامپت فارسیمو بهش بدم و به انگلیسی تبدیل کنه کاملا میخوام لوکال باشه روی سیستم ollama دارم و فک کنم با همون بشه کارو انجام داد یا اگه ایده دیگه داری بگو خیلی ساده باشه ولی شیک و حرفه ای باشه یسری چیزارو هم رعایت کن مثلا اگه الاما بسته بود خودت باز کنی یا چیز های دیگه که لازمه
 Translation: I want you to write a desktop app for me, which I think Electron would be the best option for. I want to give it my Persian prompt and have it converted to English. I want it to be completely local. I have Ollama on my system and I think it can be done with that, or if you have any other ideas, tell me. It should be very simple but elegant and professional. Also, observe some things, for example, if Ollama is closed, open it yourself, or other necessary things.
+
+Example 2 (Imperative verbs mixed with first-person):
+User: پروژه "pbudget-mobile-rn" رو ببین میخوام کاملش کنم و کاملا عملی و قابل استفاده باشه پروژه فرانت رو کامل بخون خط به خط و فایل به فایل و دقیقا اپلیکیشن رو مثل اون بزن و کاملش کن هیچی چیزی کمتر از سایت نداشته باشه اپلیکشین حتی دیزاینشم یکی باشه
+Translation: Look at the "pbudget-mobile-rn" project, I want to complete it and make it completely practical and usable. Read the frontend project completely, line by line and file by file, and make the application exactly like it and complete it. The application should have nothing less than the website, even its design should be the same.
 
 You MUST respond ONLY with a valid JSON object matching this schema:
 {
