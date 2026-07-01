@@ -4,8 +4,12 @@
   "description": "Local Persian to English Prompt Translator using Ollama",
   "main": "main.js",
   "scripts": {
+    "postinstall": "node scripts/ensure-electron.js",
     "start": "electron .",
-    "build": "ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ electron-builder --mac"
+    "build": "node scripts/build.js",
+    "build:win": "node scripts/build.js win",
+    "build:mac": "node scripts/build.js mac",
+    "run:win": "node scripts/run-built.js"
   },
   "build": {
     "electronDist": "node_modules/electron/dist",
@@ -13,6 +17,12 @@
     "productName": "Prompt Translator",
     "directories": {
       "output": "dist"
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        "nsis"
+      ]
     },
     "mac": {
       "icon": "build/icon.png",
